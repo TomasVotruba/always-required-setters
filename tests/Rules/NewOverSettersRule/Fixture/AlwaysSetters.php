@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule\Fixture;
+namespace TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule\Fixture;
 
-use TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule\Source\SomeObject;
+use TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule\Source\SomeObject;
 
-final class AlwaysSettersWithDifferentOrder
+final class AlwaysSetters
 {
     public function first()
     {
@@ -18,7 +18,7 @@ final class AlwaysSettersWithDifferentOrder
     public function second()
     {
         $alwaysSetters = new SomeObject();
-        $alwaysSetters->setAge(35);
         $alwaysSetters->setName('Doe');
+        $alwaysSetters->setAge(35);
     }
 }

@@ -5,4 +5,4 @@ services:
             - phpstan.collector
 
 rules:
-    - TomasVotruba\Ctor\Rules\AvoidAlwaysCalledSettersOnNewObjectRule
+    - TomasVotruba\Ctor\Rules\NewOverSettersRule

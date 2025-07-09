@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule;
+namespace TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule;
 
 use Iterator;
 use PHPStan\Collectors\Collector;
@@ -10,10 +10,10 @@ use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use TomasVotruba\Ctor\Collector\NewWithFollowingSettersCollector;
-use TomasVotruba\Ctor\Rules\AvoidAlwaysCalledSettersOnNewObjectRule;
-use TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule\Source\SomeObject;
+use TomasVotruba\Ctor\Rules\NewOverSettersRule;
+use TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule\Source\SomeObject;
 
-final class AvoidAlwaysCalledSettersOnNewObjectRuleTest extends RuleTestCase
+final class NewOverSettersRuleTest extends RuleTestCase
 {
     /**
      * @param mixed[] $expectedErrorMessagesWithLines
@@ -27,7 +27,7 @@ final class AvoidAlwaysCalledSettersOnNewObjectRuleTest extends RuleTestCase
     public static function provideData(): Iterator
     {
         $errorMessage = sprintf(
-            AvoidAlwaysCalledSettersOnNewObjectRule::ERROR_MESSAGE,
+            NewOverSettersRule::ERROR_MESSAGE,
             SomeObject::class,
             2,
             PHP_EOL,
@@ -51,7 +51,7 @@ final class AvoidAlwaysCalledSettersOnNewObjectRuleTest extends RuleTestCase
 
     protected function getRule(): Rule
     {
-        return self::getContainer()->getByType(AvoidAlwaysCalledSettersOnNewObjectRule::class);
+        return self::getContainer()->getByType(NewOverSettersRule::class);
     }
 
     /**

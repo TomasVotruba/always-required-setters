@@ -1,6 +1,6 @@
 <?php
 
-namespace TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule\Source;
+namespace TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule\Source;
 
 class SomeObject
 {

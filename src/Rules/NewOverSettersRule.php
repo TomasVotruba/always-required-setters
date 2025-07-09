@@ -16,11 +16,11 @@ use TomasVotruba\Ctor\Enum\RuleIdentifier;
 
 /**
  * @see NewWithFollowingSettersCollector
- * @see \TomasVotruba\Ctor\Tests\Rules\AvoidAlwaysCalledSettersOnNewObjectRule\AvoidAlwaysCalledSettersOnNewObjectRuleTest
+ * @see \TomasVotruba\Ctor\Tests\Rules\NewOverSettersRule\NewOverSettersRuleTest
  *
  * @implements Rule<CollectedDataNode>
  */
-final readonly class AvoidAlwaysCalledSettersOnNewObjectRule implements Rule
+final readonly class NewOverSettersRule implements Rule
 {
     /**
      * @var string
@@ -68,7 +68,7 @@ final readonly class AvoidAlwaysCalledSettersOnNewObjectRule implements Rule
             $errorMessage = sprintf(self::ERROR_MESSAGE, $className, $uniqueSetterHashes[0], PHP_EOL);
 
             $ruleErrors[] = RuleErrorBuilder::message($errorMessage)
-                ->identifier(RuleIdentifier::AVOID_ALWAYS_CALLED_SETTERS_ON_NEW_OBJECT)
+                ->identifier(RuleIdentifier::NEW_OVER_SETTERS)
                 ->file((string) $classReflection->getFileName())
                 ->build();
         }
