@@ -1,0 +1,25 @@
+includes:
+    - config/extension.neon
+
+parameters:
+    level: 8
+
+    errorFormat: symplify
+
+    paths:
+        - src
+        - config
+        - tests
+
+    excludePaths:
+        # tests
+        - "*/Source/*"
+        - "*/Fixture/*"
+
+    ignoreErrors:
+        # too vague
+        -
+            identifier: missingType.generics
+        -
+            message: '#Parameter \#2 \$expectedErrors of method PHPStan\\Testing\\RuleTestCase<PHPStan\\Rules\\Rule>\:\:analyse\(\) expects (.*?) given#'
+            path: tests

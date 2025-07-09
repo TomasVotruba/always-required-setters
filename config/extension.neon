@@ -1,0 +1,8 @@
+services:
+    -
+        class: TomasVotruba\Ctor\Collector\NewWithFollowingSettersCollector
+        tags:
+            - phpstan.collector
+
+rules:
+    - TomasVotruba\Ctor\Rules\AvoidAlwaysCalledSettersOnNewObjectRule
