@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace TomasVotruba\Ctor\Collector;
 
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Name;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ElseIf_;
@@ -20,15 +27,12 @@ use PHPStan\Reflection\ReflectionProvider;
  * Goal is to find objects, that are created with same set of setters,
  * then pass values via constructor instead.
  */
-final class NewWithFollowingSettersCollector implements Collector
+final readonly class NewWithFollowingSettersCollector implements Collector
 {
     public const SETTER_NAMES = 'setterNames';
 
-    private ReflectionProvider $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
+    public function __construct(private ReflectionProvider $reflectionProvider)
     {
-        $this->reflectionProvider = $reflectionProvider;
     }
 
     public function getNodeType(): string
@@ -46,34 +50,30 @@ final class NewWithFollowingSettersCollector implements Collector
         $newInstancesMetadata = [];
 
         // basically all nodes that have ->stmts inside
-        if ($node instanceof Node\Stmt\ClassMethod || $node instanceof Function_ || $node instanceof If_ || $node instanceof ElseIf_) {
+        if ($node instanceof ClassMethod || $node instanceof Function_ || $node instanceof If_ || $node instanceof ElseIf_) {
 
             foreach ((array) $node->stmts as $stmt) {
-                if (! $stmt instanceof Node\Stmt\Expression) {
+                if (! $stmt instanceof Expression) {
                     continue;
                 }
 
-                if ($stmt->expr instanceof Node\Expr\Assign) {
+                if ($stmt->expr instanceof Assign) {
                     $assign = $stmt->expr;
-                    if ($assign->expr instanceof Node\Expr\New_) {
+                    if ($assign->expr instanceof New_) {
                         $new = $assign->expr;
-                        if ($new->class instanceof Node\Name) {
+                        if ($new->class instanceof Name) {
                             $assignedVariable = $assign->var;
-                            if ($assignedVariable instanceof Node\Expr\Variable) {
-                                if (is_string($assignedVariable->name)) {
-                                    $variableName = $assignedVariable->name;
-                                    $className = $new->class->toString();
-
-                                    if ($this->shouldSkipClass($className)) {
-                                        continue;
-                                    }
-
-                                    $newInstancesMetadata[] = [
-                                        'variableName' => $variableName,
-                                        'className' => $className,
-                                        self::SETTER_NAMES => [],
-                                    ];
+                            if ($assignedVariable instanceof Variable && is_string($assignedVariable->name)) {
+                                $variableName = $assignedVariable->name;
+                                $className = $new->class->toString();
+                                if ($this->shouldSkipClass($className)) {
+                                    continue;
                                 }
+                                $newInstancesMetadata[] = [
+                                    'variableName' => $variableName,
+                                    'className' => $className,
+                                    self::SETTER_NAMES => [],
+                                ];
                             }
 
                             continue;
@@ -86,10 +86,10 @@ final class NewWithFollowingSettersCollector implements Collector
                     continue;
                 }
 
-                if ($stmt->expr instanceof Node\Expr\MethodCall) {
+                if ($stmt->expr instanceof MethodCall) {
                     $methodCall = $stmt->expr;
 
-                    if ($methodCall->var instanceof Node\Expr\Variable && $methodCall->name instanceof Identifier) {
+                    if ($methodCall->var instanceof Variable && $methodCall->name instanceof Identifier) {
                         foreach ($newInstancesMetadata as $key => $newInstanceMetadata) {
                             if ($newInstanceMetadata['variableName'] === $methodCall->var->name) {
                                 // record the method call here

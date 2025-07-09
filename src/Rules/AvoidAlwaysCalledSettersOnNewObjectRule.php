@@ -20,18 +20,15 @@ use TomasVotruba\Ctor\Enum\RuleIdentifier;
  *
  * @implements Rule<CollectedDataNode>
  */
-final class AvoidAlwaysCalledSettersOnNewObjectRule implements Rule
+final readonly class AvoidAlwaysCalledSettersOnNewObjectRule implements Rule
 {
     /**
      * @var string
      */
     public const ERROR_MESSAGE = 'Class "%s" is always created with same %d setters.%sConsider passing these values via constructor instead';
 
-    private ReflectionProvider $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
+    public function __construct(private ReflectionProvider $reflectionProvider)
     {
-        $this->reflectionProvider = $reflectionProvider;
     }
 
     public function getNodeType(): string
