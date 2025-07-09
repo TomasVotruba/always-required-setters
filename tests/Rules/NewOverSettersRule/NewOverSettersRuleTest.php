@@ -26,12 +26,7 @@ final class NewOverSettersRuleTest extends RuleTestCase
 
     public static function provideData(): Iterator
     {
-        $errorMessage = sprintf(
-            NewOverSettersRule::ERROR_MESSAGE,
-            SomeObject::class,
-            2,
-            PHP_EOL,
-        );
+        $errorMessage = sprintf(NewOverSettersRule::ERROR_MESSAGE, SomeObject::class, 2, PHP_EOL);
 
         yield [__DIR__ . '/Fixture/AlwaysSetters.php', [[$errorMessage, -1]]];
         yield [__DIR__ . '/Fixture/AlwaysSettersWithDifferentOrder.php', [[$errorMessage, -1]]];
