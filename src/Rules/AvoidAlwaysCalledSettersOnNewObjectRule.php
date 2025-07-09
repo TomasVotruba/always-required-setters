@@ -27,8 +27,9 @@ final readonly class AvoidAlwaysCalledSettersOnNewObjectRule implements Rule
      */
     public const ERROR_MESSAGE = 'Class "%s" is always created with same %d setters.%sConsider passing these values via constructor instead';
 
-    public function __construct(private ReflectionProvider $reflectionProvider)
-    {
+    public function __construct(
+        private ReflectionProvider $reflectionProvider
+    ) {
     }
 
     public function getNodeType(): string
