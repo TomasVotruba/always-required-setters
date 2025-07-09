@@ -96,7 +96,7 @@ final class NewWithFollowingSettersCollector implements Collector
                                 $setterMethodName = $methodCall->name->toString();
 
                                 // probably not a setter
-                                if (str_starts_with($setterMethodName, 'get')) {
+                                if (strncmp($setterMethodName, 'get', strlen('get')) === 0) {
                                     continue;
                                 }
 
@@ -128,7 +128,7 @@ final class NewWithFollowingSettersCollector implements Collector
         }
 
         // skip vendor classes
-        return str_contains($classReflection->getFileName(), 'vendor');
+        return strpos($classReflection->getFileName(), 'vendor') !== false;
     }
 
     private function isTestCase(Scope $scope): bool
@@ -138,6 +138,6 @@ final class NewWithFollowingSettersCollector implements Collector
         }
 
         $classReflection = $scope->getClassReflection();
-        return str_ends_with($classReflection->getName(), 'Test');
+        return substr_compare($classReflection->getName(), 'Test', -strlen('Test')) === 0;
     }
 }
