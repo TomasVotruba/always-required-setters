@@ -34,6 +34,8 @@ Such chained setters often indicate implicit required dependencies. By moving th
 composer require tomasvotruba/ctor --dev
 ```
 
+<br>
+
 ## Usage
 
 Make use [`phpstan/extension-installer`](https://github.com/phpstan/extension-installer) to load the extension automatically.
