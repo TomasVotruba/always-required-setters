@@ -4,6 +4,8 @@
 
 If you can use constructor instead of setters, use it. These PHPStan rules will help you to find such cases.
 
+<br>
+
 ## What It Does?
 
 This tool collects instances of `new object()` followed by a series of method calls on the same object:
