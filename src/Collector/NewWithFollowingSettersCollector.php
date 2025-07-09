@@ -70,6 +70,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
                                 if ($this->shouldSkipClass($className)) {
                                     continue;
                                 }
+
                                 $newInstancesMetadata[] = [
                                     'variableName' => $variableName,
                                     'className' => $className,
