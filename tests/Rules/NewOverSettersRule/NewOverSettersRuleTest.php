@@ -34,6 +34,7 @@ final class NewOverSettersRuleTest extends RuleTestCase
 
         yield [__DIR__ . '/Fixture/SkipDifferentSingleMethod.php', []];
         yield [__DIR__ . '/Fixture/SkipOnceThanTwiceMethod.php', []];
+        yield [__DIR__ . '/Fixture/SkipReturnInMiddle.php', []];
     }
 
     /**

@@ -59,27 +59,9 @@ final readonly class NewWithFollowingSettersCollector implements Collector
                 }
 
                 if ($stmt->expr instanceof Assign) {
-                    $assign = $stmt->expr;
-                    if ($assign->expr instanceof New_) {
-                        $new = $assign->expr;
-                        if ($new->class instanceof Name) {
-                            $assignedVariable = $assign->var;
-                            if ($assignedVariable instanceof Variable && is_string($assignedVariable->name)) {
-                                $variableName = $assignedVariable->name;
-                                $className = $new->class->toString();
-                                if ($this->shouldSkipClass($className)) {
-                                    continue;
-                                }
-
-                                $newInstancesMetadata[] = [
-                                    'variableName' => $variableName,
-                                    'className' => $className,
-                                    self::SETTER_NAMES => [],
-                                ];
-                            }
-
-                            continue;
-                        }
+                    $newInstanceMetadata = $this->matchAssignNewObjectToVariable($stmt);
+                    if ($newInstanceMetadata !== null) {
+                        $newInstancesMetadata[] = $newInstanceMetadata;
                     }
                 }
 
@@ -141,5 +123,47 @@ final readonly class NewWithFollowingSettersCollector implements Collector
 
         $classReflection = $scope->getClassReflection();
         return str_ends_with($classReflection->getName(), 'Test');
+    }
+
+    /**
+     * @return array{variableName: string, className: string, setterNames: string[]}|null
+     */
+    private function matchAssignNewObjectToVariable(Expression $expression): ?array
+    {
+        if (! $expression->expr instanceof Assign) {
+            return null;
+        }
+
+        $assign = $expression->expr;
+        if (! $assign->expr instanceof New_) {
+            return null;
+        }
+
+        $new = $assign->expr;
+        if (! $new->class instanceof Name) {
+            return null;
+        }
+
+        $assignedVariable = $assign->var;
+        if (! $assignedVariable instanceof Variable) {
+            return null;
+        }
+
+        if (! is_string($assignedVariable->name)) {
+            return null;
+        }
+
+        $variableName = $assignedVariable->name;
+
+        $className = $new->class->toString();
+        if ($this->shouldSkipClass($className)) {
+            return null;
+        }
+
+        return [
+            'variableName' => $variableName,
+            'className' => $className,
+            self::SETTER_NAMES => [],
+        ];
     }
 }
