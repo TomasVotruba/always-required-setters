@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\Throw_;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -16,6 +17,8 @@ use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
+use PhpParser\Node\Stmt\Return_;
+use PhpParser\NodeFinder;
 use PHPStan\Analyser\Scope;
 use PHPStan\Collectors\Collector;
 use PHPStan\Reflection\ReflectionProvider;
@@ -48,51 +51,61 @@ final readonly class NewWithFollowingSettersCollector implements Collector
             return null;
         }
 
-        $newInstancesMetadata = [];
-
         // basically all nodes that have ->stmts inside
-        if ($node instanceof ClassMethod || $node instanceof Function_ || $node instanceof If_ || $node instanceof ElseIf_) {
+        if (! $node instanceof ClassMethod && ! $node instanceof Function_ && ! $node instanceof If_ && ! $node instanceof ElseIf_) {
+            return null;
+        }
 
-            foreach ((array) $node->stmts as $stmt) {
-                if (! $stmt instanceof Expression) {
+        $newInstancesMetadata = [];
+        $isFlowBrokenInMiddle = false;
+
+        foreach ((array) $node->stmts as $stmt) {
+            if ($newInstancesMetadata !== []) {
+                // skip iterating if there is a return expression
+                if ($this->isNodeBreakingFlow($stmt)) {
+                    $isFlowBrokenInMiddle = true;
                     continue;
                 }
+            }
 
-                if ($stmt->expr instanceof Assign) {
-                    $newInstanceMetadata = $this->matchAssignNewObjectToVariable($stmt);
-                    if ($newInstanceMetadata !== null) {
-                        $newInstancesMetadata[] = $newInstanceMetadata;
-                    }
+            if (! $stmt instanceof Expression) {
+                continue;
+            }
+
+            if ($stmt->expr instanceof Assign) {
+                $newInstanceMetadata = $this->matchAssignNewObjectToVariable($stmt);
+                if ($newInstanceMetadata !== null) {
+                    $newInstancesMetadata[] = $newInstanceMetadata;
                 }
+            }
 
-                // waiting for first item
-                if ($newInstancesMetadata === []) {
-                    continue;
-                }
+            // waiting for first item, before we check for method calls
+            if ($newInstancesMetadata === []) {
+                continue;
+            }
 
-                if ($stmt->expr instanceof MethodCall) {
-                    $methodCall = $stmt->expr;
+            if ($stmt->expr instanceof MethodCall) {
+                $methodCall = $stmt->expr;
 
-                    if ($methodCall->var instanceof Variable && $methodCall->name instanceof Identifier) {
-                        foreach ($newInstancesMetadata as $key => $newInstanceMetadata) {
-                            if ($newInstanceMetadata['variableName'] === $methodCall->var->name) {
-                                // record the method call here
-                                $setterMethodName = $methodCall->name->toString();
+                if ($methodCall->var instanceof Variable && $methodCall->name instanceof Identifier) {
+                    foreach ($newInstancesMetadata as $key => $newInstanceMetadata) {
+                        if ($newInstanceMetadata['variableName'] === $methodCall->var->name) {
+                            // record the method call here
+                            $setterMethodName = $methodCall->name->toString();
 
-                                // probably not a setter
-                                if (str_starts_with($setterMethodName, 'get')) {
-                                    continue;
-                                }
-
-                                $newInstancesMetadata[$key][self::SETTER_NAMES][] = $setterMethodName;
+                            // probably not a setter
+                            if (str_starts_with($setterMethodName, 'get')) {
+                                continue;
                             }
+
+                            $newInstancesMetadata[$key][self::SETTER_NAMES][] = $setterMethodName;
                         }
                     }
                 }
             }
         }
 
-        if ($newInstancesMetadata === []) {
+        if ($newInstancesMetadata === [] || $isFlowBrokenInMiddle === true) {
             return null;
         }
 
@@ -165,5 +178,18 @@ final readonly class NewWithFollowingSettersCollector implements Collector
             'className' => $className,
             self::SETTER_NAMES => [],
         ];
+    }
+
+    private function isNodeBreakingFlow(\PhpParser\Node $node): bool
+    {
+        $nodeFinder = new NodeFinder();
+
+        return (bool) $nodeFinder->find($node, function (Node $node) {
+            if ($node instanceof Return_) {
+                return true;
+            }
+
+            return $node instanceof Throw_;
+        });
     }
 }

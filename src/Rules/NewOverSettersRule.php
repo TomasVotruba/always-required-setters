@@ -54,6 +54,11 @@ final readonly class NewOverSettersRule implements Rule
         $ruleErrors = [];
 
         foreach ($classesToSetterHashes as $className => $uniqueSetterHashes) {
+            // we need at least 2 different hashes to compare
+            if (count($uniqueSetterHashes) === 1) {
+                continue;
+            }
+
             // if all counters are the same, report it
             if (count(array_unique($uniqueSetterHashes)) !== 1) {
                 continue;
