@@ -60,12 +60,10 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         $isFlowBrokenInMiddle = false;
 
         foreach ((array) $node->stmts as $stmt) {
-            if ($newInstancesMetadata !== []) {
-                // skip iterating if there is a return expression
-                if ($this->isNodeBreakingFlow($stmt)) {
-                    $isFlowBrokenInMiddle = true;
-                    continue;
-                }
+            // skip iterating if there is a return expression
+            if ($newInstancesMetadata !== [] && $this->isNodeBreakingFlow($stmt)) {
+                $isFlowBrokenInMiddle = true;
+                continue;
             }
 
             if (! $stmt instanceof Expression) {
@@ -105,7 +103,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
             }
         }
 
-        if ($newInstancesMetadata === [] || $isFlowBrokenInMiddle === true) {
+        if ($newInstancesMetadata === [] || $isFlowBrokenInMiddle) {
             return null;
         }
 
@@ -180,11 +178,11 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         ];
     }
 
-    private function isNodeBreakingFlow(\PhpParser\Node $node): bool
+    private function isNodeBreakingFlow(Node $node): bool
     {
         $nodeFinder = new NodeFinder();
 
-        return (bool) $nodeFinder->find($node, function (Node $node) {
+        return (bool) $nodeFinder->find($node, function (Node $node): bool {
             if ($node instanceof Return_) {
                 return true;
             }
