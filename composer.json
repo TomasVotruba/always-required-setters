@@ -25,7 +25,10 @@
     "autoload-dev": {
         "psr-4": {
             "TomasVotruba\\Ctor\\Tests\\": "tests"
-        }
+        },
+        "classmap": [
+            "stubs"
+        ]
     },
     "extra": {
         "phpstan": {

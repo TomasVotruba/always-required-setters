@@ -34,6 +34,11 @@ final readonly class NewWithFollowingSettersCollector implements Collector
 {
     public const SETTER_NAMES = 'setterNames';
 
+    /**
+     * @var string[]
+     */
+    private const EXCLUDED_CLASSES = ['Symfony\Component\HttpKernel\Kernel'];
+
     public function __construct(
         private ReflectionProvider $reflectionProvider
     ) {
@@ -52,7 +57,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         }
 
         // basically all nodes that have ->stmts inside
-        if (! $node instanceof ClassMethod && ! $node instanceof Function_ && ! $node instanceof If_ && ! $node instanceof ElseIf_) {
+        if (! $node instanceof ClassMethod && ! $node instanceof Function_ && ! $node instanceof If_ && ! $node instanceof ElseIf_ && ! $node instanceof Node\Stmt\While_ && ! $node instanceof Node\Stmt\Foreach_ && ! $node instanceof Node\Stmt\For_) {
             return null;
         }
 
@@ -120,6 +125,13 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         $classReflection = $this->reflectionProvider->getClass($className);
         if ($classReflection->getFileName() === null) {
             return true;
+        }
+
+        // skip excluded classes
+        foreach (self::EXCLUDED_CLASSES as $excludedClass) {
+            if ($classReflection->is($excludedClass)) {
+                return true;
+            }
         }
 
         // skip vendor classes
