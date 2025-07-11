@@ -25,7 +25,7 @@ final readonly class NewOverSettersRule implements Rule
     /**
      * @var string
      */
-    public const ERROR_MESSAGE = 'Class "%s" is always created with same %d setters.%sConsider passing these values via constructor instead';
+    public const ERROR_MESSAGE = 'Class "%s" is always created with same %d setters: "%s()"%sPass these values via constructor instead';
 
     public function __construct(
         private ReflectionProvider $reflectionProvider
@@ -49,18 +49,18 @@ final readonly class NewOverSettersRule implements Rule
         // if 0 setters, skipp it
         // if its always the same setters, report it
 
-        $classesToSetterHashes = $this->groupClassesToSetterHash($collectedDataByFile);
+        $classesToSetterHashes = $this->groupClassesToSetterNames($collectedDataByFile);
 
         $ruleErrors = [];
 
-        foreach ($classesToSetterHashes as $className => $uniqueSetterHashes) {
-            // we need at least 2 different hashes to compare
-            if (count($uniqueSetterHashes) === 1) {
+        foreach ($classesToSetterHashes as $className => $setterNameGroups) {
+            // we need at least 2 different occurrences to compare
+            if (count($setterNameGroups) === 1) {
                 continue;
             }
 
             // if all counters are the same, report it
-            if (count(array_unique($uniqueSetterHashes)) !== 1) {
+            if (count(array_unique($setterNameGroups)) !== 1) {
                 continue;
             }
 
@@ -68,9 +68,21 @@ final readonly class NewOverSettersRule implements Rule
                 continue;
             }
 
+            if (! $this->areAlwaysTheSameMethodNames($setterNameGroups)) {
+                continue;
+            }
+
             $classReflection = $this->reflectionProvider->getClass($className);
 
-            $errorMessage = sprintf(self::ERROR_MESSAGE, $className, $uniqueSetterHashes[0], PHP_EOL);
+            $setterNameGroup = $setterNameGroups[0];
+
+            $errorMessage = sprintf(
+                self::ERROR_MESSAGE,
+                $className,
+                count($setterNameGroup),
+                implode('()", "', $setterNameGroup),
+                PHP_EOL
+            );
 
             $ruleErrors[] = RuleErrorBuilder::message($errorMessage)
                 ->identifier(RuleIdentifier::NEW_OVER_SETTERS)
@@ -83,9 +95,9 @@ final readonly class NewOverSettersRule implements Rule
 
     /**
      * @param mixed[] $collectedDataByFile
-     * @return array<string, string[]>
+     * @return array<string, string[][]>
      */
-    private function groupClassesToSetterHash(array $collectedDataByFile): array
+    private function groupClassesToSetterNames(array $collectedDataByFile): array
     {
         $classesToSetters = [];
         foreach ($collectedDataByFile as $collectedData) {
@@ -101,15 +113,24 @@ final readonly class NewOverSettersRule implements Rule
                     $uniqueSetterNames = array_unique($collectedItem[NewWithFollowingSettersCollector::SETTER_NAMES]);
                     sort($uniqueSetterNames);
 
-                    $settersCount = count($uniqueSetterNames);
-
-                    $countAndMethodNameHash = $settersCount . '-' . implode('-', $uniqueSetterNames);
-
-                    $classesToSetters[$className][] = $countAndMethodNameHash;
+                    $classesToSetters[$className][] = $uniqueSetterNames;
                 }
             }
         }
 
         return $classesToSetters;
+    }
+
+    /**
+     * @param array<string[]> $methodNameGroups
+     */
+    private function areAlwaysTheSameMethodNames(array $methodNameGroups): bool
+    {
+        $methodNameHashes = [];
+        foreach ($methodNameGroups as $methodNameGroup) {
+            $methodNameHashes[] = implode('_', $methodNameGroup);
+        }
+
+        return count(array_unique($methodNameHashes)) === 1;
     }
 }
