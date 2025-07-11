@@ -59,8 +59,7 @@ final readonly class NewOverSettersRule implements Rule
                 continue;
             }
 
-            // if all counters are the same, report it
-            if (count(array_unique($setterNameGroups)) !== 1) {
+            if (! $this->areAlwaysTheSameMethodNames($setterNameGroups)) {
                 continue;
             }
 
@@ -68,12 +67,7 @@ final readonly class NewOverSettersRule implements Rule
                 continue;
             }
 
-            if (! $this->areAlwaysTheSameMethodNames($setterNameGroups)) {
-                continue;
-            }
-
             $classReflection = $this->reflectionProvider->getClass($className);
-
             $setterNameGroup = $setterNameGroups[0];
 
             $errorMessage = sprintf(
