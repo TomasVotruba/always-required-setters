@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TomasVotruba\Ctor\Collector;
 
+use PhpParser\Node\Stmt\While_;
+use PhpParser\Node\Stmt\Foreach_;
+use PhpParser\Node\Stmt\For_;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
@@ -57,7 +60,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         }
 
         // basically all nodes that have ->stmts inside
-        if (! $node instanceof ClassMethod && ! $node instanceof Function_ && ! $node instanceof If_ && ! $node instanceof ElseIf_ && ! $node instanceof Node\Stmt\While_ && ! $node instanceof Node\Stmt\Foreach_ && ! $node instanceof Node\Stmt\For_) {
+        if (! $node instanceof ClassMethod && ! $node instanceof Function_ && ! $node instanceof If_ && ! $node instanceof ElseIf_ && ! $node instanceof While_ && ! $node instanceof Foreach_ && ! $node instanceof For_) {
             return null;
         }
 
