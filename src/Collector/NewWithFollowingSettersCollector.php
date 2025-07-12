@@ -35,7 +35,15 @@ use PHPStan\Reflection\ReflectionProvider;
  */
 final readonly class NewWithFollowingSettersCollector implements Collector
 {
+    /**
+     * @var string
+     */
     public const SETTER_NAMES = 'setterNames';
+
+    /**
+     * @var string
+     */
+    private const VARIABLE_NAME = 'variableName';
 
     /**
      * @var string[]
@@ -95,7 +103,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
 
                 if ($methodCall->var instanceof Variable && $methodCall->name instanceof Identifier) {
                     foreach ($newInstancesMetadata as $key => $newInstanceMetadata) {
-                        if ($newInstanceMetadata['variableName'] === $methodCall->var->name) {
+                        if ($newInstanceMetadata[self::VARIABLE_NAME] === $methodCall->var->name) {
                             // record the method call here
                             $setterMethodName = $methodCall->name->toString();
 
@@ -118,6 +126,9 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         return $newInstancesMetadata;
     }
 
+    /**
+     * @param class-string $className
+     */
     private function shouldSkipClass(string $className): bool
     {
         // must be existing class
@@ -138,7 +149,13 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         }
 
         // skip vendor classes
-        return str_contains($classReflection->getFileName(), 'vendor');
+        if (str_contains($classReflection->getFileName(), 'vendor')) {
+            return true;
+        }
+
+        // skip Doctrine entities
+        $fileContents = file_get_contents($classReflection->getFileName());
+        return str_contains($fileContents, '@ORM\Entity') || str_starts_with($fileContents, '#[Entity]');
     }
 
     private function isTestCase(Scope $scope): bool
@@ -187,7 +204,7 @@ final readonly class NewWithFollowingSettersCollector implements Collector
         }
 
         return [
-            'variableName' => $variableName,
+            self::VARIABLE_NAME => $variableName,
             'className' => $className,
             self::SETTER_NAMES => [],
         ];
